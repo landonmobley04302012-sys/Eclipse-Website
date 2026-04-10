@@ -196,6 +196,41 @@
     </div>
 
     <script>
+        // ============================================
+        // CONFIGURATION - YOUR BACKEND URL
+        // ============================================
+        const API_URL = "https://eclipse-backend-31de.onrender.com";
+        // ============================================
+
+        let currentKey = "";
+
+        async function generateKey() {
+            const keyDisplay = document.getElementById('keyDisplay');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/generate-key`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.key) {
+                    currentKey = data.key;
+                    keyDisplay.textContent = currentKey;
+                } else {
+                    currentKey = generateFallbackKey();
+                    keyDisplay.textContent = currentKey;
+                }
+            } catch (error) {
+                console.error('API not reachable, using fallback:', error);
+                currentKey = generateFallbackKey();
+                keyDisplay.textContent = currentKey;
+            }
+        }
+
         function generateFallbackKey() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             const segments = [];
@@ -209,10 +244,6 @@
             return 'ECLIPSE-' + segments.join('-');
         }
 
-        const keyDisplay = document.getElementById('keyDisplay');
-        const newKey = generateFallbackKey();
-        keyDisplay.textContent = newKey;
-
         document.getElementById('copyBtn').addEventListener('click', function() {
             const keyText = document.getElementById('keyDisplay').textContent;
             navigator.clipboard.writeText(keyText).then(() => {
@@ -225,6 +256,8 @@
                 alert('Failed to copy. Please copy manually.');
             });
         });
+
+        generateKey();
     </script>
 </body>
 </html>
