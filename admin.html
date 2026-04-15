@@ -1,479 +1,937 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eclipse Admin · Script Manager</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0a0a0a 0%, #12122a 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Poppins', sans-serif;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            width: 100%;
-            background: rgba(20, 20, 40, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(212, 175, 55, 0.4);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-        .logo h1 {
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            background: linear-gradient(135deg, #d4af37 0%, #f5e6a3 50%, #d4af37 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            color: #a0a0c0;
-            font-size: 14px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            padding-bottom: 15px;
-        }
-        .login-box, .admin-panel {
-            transition: all 0.3s ease;
-        }
-        .login-box input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        .btn {
-            background: linear-gradient(135deg, #d4af37 0%, #f5e6a3 100%);
-            color: #0a0a0a;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
-            color: white;
-        }
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 12px;
-            width: auto;
-        }
-        .error-message {
-            color: #ff6b6b;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .success-message {
-            color: #4caf50;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .script-list {
-            margin: 20px 0;
-        }
-        .script-item {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .script-info {
-            color: white;
-        }
-        .script-name {
-            font-weight: 600;
-            color: #d4af37;
-        }
-        .script-id {
-            font-size: 12px;
-            color: #a0a0c0;
-        }
-        .upload-area {
-            border: 2px dashed rgba(212, 175, 55, 0.3);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            margin: 20px 0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .upload-area:hover {
-            border-color: rgba(212, 175, 55, 0.6);
-            background: rgba(212, 175, 55, 0.05);
-        }
-        .upload-area input {
-            display: none;
-        }
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        .upload-text {
-            color: #c0c0e0;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .access-denied {
-            text-align: center;
-            padding: 60px 20px;
-        }
-        .access-denied h2 {
-            color: #ff6b6b;
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-        .access-denied p {
-            color: #a0a0c0;
-            margin-bottom: 30px;
-        }
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .whitelist-section {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-        }
-        .whitelist-title {
-            color: #d4af37;
-            margin-bottom: 15px;
-        }
-        .whitelist-input {
-            display: flex;
-            gap: 10px;
-        }
-        .whitelist-input input {
-            flex: 1;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 8px;
-            color: white;
-        }
-        .whitelist-list {
-            margin-top: 15px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .whitelist-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            margin-bottom: 5px;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="logo">
-            <h1>🌑 ECLIPSE ADMIN</h1>
-        </div>
-        <div class="subtitle">Script Manager · Restricted Access</div>
+require('dotenv').config();
 
-        <!-- Access Denied Message (shown to unauthorized users) -->
-        <div id="accessDenied" class="access-denied hidden">
-            <h2>⛔ ACCESS DENIED</h2>
-            <p>You are not whitelisted to view this page.</p>
-            <p style="font-size: 12px; color: #606080;">If you believe this is an error, contact the system administrator.</p>
-        </div>
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const express = require('express');
+const cors = require('cors');
+const initSqlJs = require('sql.js');
+const fs = require('fs');
+const path = require('path');
 
-        <!-- Login Box -->
-        <div id="loginBox" class="login-box">
-            <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="if(event.key==='Enter') login()">
-            <button class="btn" onclick="login()">🔐 Login</button>
-            <div id="loginError" class="error-message"></div>
-        </div>
+// ============================================
+// EXPRESS API SERVER
+// ============================================
+const app = express();
+const API_PORT = process.env.PORT || 8080;
 
-        <!-- Admin Panel (hidden until login) -->
-        <div id="adminPanel" class="admin-panel hidden">
-            <div class="header-actions">
-                <h3 style="color: #d4af37;">📜 Script Management</h3>
-                <button class="btn btn-small" onclick="logout()">🚪 Logout</button>
-            </div>
-            
-            <!-- Upload Area -->
-            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click to upload .lua script<br><small style="color: #8080a0;">File name must be the Game ID (e.g., 13822889.lua)</small></div>
-                <input type="file" id="fileInput" accept=".lua" onchange="uploadScript(this)">
-            </div>
-            
-            <div id="uploadStatus" class="success-message"></div>
-            
-            <!-- Script List -->
-            <div class="script-list" id="scriptList">
-                <p style="color: #a0a0c0; text-align: center;">Loading scripts...</p>
-            </div>
-            
-            <!-- Whitelist Management -->
-            <div class="whitelist-section">
-                <div class="whitelist-title">👥 Admin Whitelist</div>
-                <div class="whitelist-input">
-                    <input type="text" id="whitelistUserInput" placeholder="Enter Discord ID or username">
-                    <button class="btn btn-small" onclick="addToWhitelist()">Add</button>
-                </div>
-                <div class="whitelist-list" id="whitelistList">
-                    <p style="color: #a0a0c0;">Loading whitelist...</p>
-                </div>
-            </div>
-        </div>
-    </div>
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'HEAD', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json());
 
-    <script>
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        const ADMIN_PASSWORD = "EclipseAdmin2024!"; // CHANGE THIS!
-        const API_URL = "https://eclipse-discordbot-production.up.railway.app";
-        const GITHUB_TOKEN = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"; // Get from GitHub Settings → Developer settings → Tokens
-        const GITHUB_REPO = "landonmobley04302012-sys/Eclipse-Scripts";
-        
-        // ============================================
-        // SESSION MANAGEMENT
-        // ============================================
-        let isAuthenticated = false;
-        let currentUser = null;
-        
-        // Check if user is whitelisted
-        async function checkWhitelist(identifier) {
-            try {
-                const response = await fetch(`${API_URL}/api/admin/check-whitelist`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier })
-                });
-                const data = await response.json();
-                return data.whitelisted;
-            } catch (e) {
-                return false;
-            }
+// ============================================
+// HEALTH CHECK - CRITICAL FOR RAILWAY
+// ============================================
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
+app.head('/', (req, res) => {
+    res.status(200).end();
+});
+
+app.head('/health', (req, res) => {
+    res.status(200).end();
+});
+
+// ============================================
+// DATABASE SETUP (sql.js)
+// ============================================
+const dbPath = path.join(__dirname, 'eclipse.db');
+let db;
+
+const filebuffer = fs.existsSync(dbPath) ? fs.readFileSync(dbPath) : null;
+
+initSqlJs().then(SQL => {
+    db = new SQL.Database(filebuffer);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            discord_id TEXT UNIQUE NOT NULL,
+            roblox_username TEXT,
+            linked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            blacklisted BOOLEAN DEFAULT 0,
+            blacklist_reason TEXT
+        )
+    `);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key_string TEXT UNIQUE NOT NULL,
+            key_type TEXT NOT NULL CHECK (key_type IN ('timed', 'permanent')),
+            duration_days INTEGER,
+            expires_at DATETIME,
+            hwid TEXT,
+            hwid_bound_at DATETIME,
+            hwid_reset_count INTEGER DEFAULT 0,
+            last_hwid_reset DATETIME,
+            discord_id TEXT,
+            redeemed_at DATETIME,
+            created_by TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_active BOOLEAN DEFAULT 1,
+            FOREIGN KEY (discord_id) REFERENCES users(discord_id)
+        )
+    `);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS hwid_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            discord_id TEXT NOT NULL,
+            reset_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (discord_id) REFERENCES users(discord_id)
+        )
+    `);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS hwid_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key_string TEXT,
+            hwid TEXT,
+            ip TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    
+    db.run(`
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    `);
+    
+    // NEW: Admin whitelist table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS admin_whitelist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            identifier TEXT UNIQUE NOT NULL,
+            added_by TEXT,
+            added_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    
+    // NEW: Scripts storage table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS scripts (
+            game_id TEXT PRIMARY KEY,
+            name TEXT,
+            content TEXT,
+            uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    
+    db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('script_version', '1.0.0')`);
+    db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('hwid_reset_cooldown_hours', '24')`);
+    db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('maintenance_mode', 'false')`);
+    
+    saveDatabase();
+    console.log('✅ Database loaded successfully');
+    
+    startDiscordBot();
+});
+
+function saveDatabase() {
+    if (db) {
+        const data = db.export();
+        const buffer = Buffer.from(data);
+        fs.writeFileSync(dbPath, buffer);
+    }
+}
+
+function dbRun(sql, params = []) {
+    if (!db) return;
+    db.run(sql, params);
+    saveDatabase();
+}
+
+function dbGet(sql, params = []) {
+    if (!db) return null;
+    const stmt = db.prepare(sql);
+    stmt.bind(params);
+    const result = stmt.step() ? stmt.getAsObject() : null;
+    stmt.free();
+    return result;
+}
+
+function dbAll(sql, params = []) {
+    if (!db) return [];
+    const results = [];
+    const stmt = db.prepare(sql);
+    stmt.bind(params);
+    while (stmt.step()) {
+        results.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return results;
+}
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const CONFIG = {
+    SERVER_ID: '1485915586461700108',
+    PANEL_CHANNEL_ID: '1485939923562532864',
+    SUPPORT_CHANNEL_ID: '1485942942106648668',
+    BUGS_CHANNEL_ID: '1486269187671326740',
+    DISCORD_INVITE: 'https://discord.gg/4w6VtzFa5z',
+    WEBSITE_URL: 'https://landonmobley04302012-sys.github.io/Eclipse-Website/',
+    CLIENT_ID: '1492164624890462288',
+    SCRIPT_VERSION: '1.0.0'
+};
+
+// ============================================
+// API ROUTES
+// ============================================
+
+// ============================================
+// ADMIN API ROUTES
+// ============================================
+
+// Check if user is whitelisted
+app.post('/api/admin/check-whitelist', (req, res) => {
+    const { identifier } = req.body;
+    const exists = dbGet(`SELECT identifier FROM admin_whitelist WHERE identifier = ?`, [identifier]);
+    res.json({ whitelisted: !!exists });
+});
+
+// Get all whitelisted users
+app.get('/api/admin/whitelist', (req, res) => {
+    const whitelist = dbAll(`SELECT identifier FROM admin_whitelist ORDER BY added_at DESC`);
+    res.json(whitelist);
+});
+
+// Add to whitelist
+app.post('/api/admin/whitelist/add', (req, res) => {
+    const { identifier } = req.body;
+    dbRun(`INSERT OR IGNORE INTO admin_whitelist (identifier, added_by) VALUES (?, ?)`, [identifier, 'admin']);
+    res.json({ success: true });
+});
+
+// Remove from whitelist
+app.post('/api/admin/whitelist/remove', (req, res) => {
+    const { identifier } = req.body;
+    dbRun(`DELETE FROM admin_whitelist WHERE identifier = ?`, [identifier]);
+    res.json({ success: true });
+});
+
+// List all scripts
+app.get('/api/admin/scripts', (req, res) => {
+    const scripts = dbAll(`SELECT game_id, name, uploaded_at FROM scripts ORDER BY uploaded_at DESC`);
+    res.json(scripts.map(s => ({ gameId: s.game_id, name: s.name, uploaded_at: s.uploaded_at })));
+});
+
+// Upload script
+app.post('/api/admin/upload', (req, res) => {
+    const { gameId, content } = req.body;
+    
+    if (!gameId || !content) {
+        return res.status(400).json({ success: false, error: 'Missing gameId or content' });
+    }
+    
+    dbRun(`INSERT OR REPLACE INTO scripts (game_id, name, content, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`, 
+        [gameId, `Game ${gameId}`, content]);
+    
+    res.json({ success: true });
+});
+
+// Delete script
+app.post('/api/admin/delete', (req, res) => {
+    const { gameId } = req.body;
+    dbRun(`DELETE FROM scripts WHERE game_id = ?`, [gameId]);
+    res.json({ success: true });
+});
+
+// ============================================
+// PUBLIC SCRIPT ENDPOINT (For loader.lua)
+// ============================================
+app.post('/api/script', (req, res) => {
+    const { key, hwid, gameId } = req.body;
+    
+    if (!key || !hwid || !gameId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Validate key
+    const keyData = dbGet(`
+        SELECT k.*, u.blacklisted, u.blacklist_reason 
+        FROM keys k
+        LEFT JOIN users u ON k.discord_id = u.discord_id
+        WHERE k.key_string = ?
+    `, [key]);
+    
+    if (!keyData) {
+        return res.status(403).json({ error: 'Invalid key' });
+    }
+    
+    if (!keyData.is_active) {
+        return res.status(403).json({ error: 'Key is not active' });
+    }
+    
+    if (keyData.blacklisted) {
+        return res.status(403).json({ error: 'User is blacklisted' });
+    }
+    
+    if (keyData.key_type === 'timed' && keyData.expires_at) {
+        if (new Date(keyData.expires_at) < new Date()) {
+            dbRun(`UPDATE keys SET is_active = 0 WHERE key_string = ?`, [key]);
+            return res.status(403).json({ error: 'Key has expired' });
         }
-        
-        // Login function
-        async function login() {
-            const password = document.getElementById('passwordInput').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            if (password !== ADMIN_PASSWORD) {
-                errorDiv.textContent = '❌ Invalid password';
-                return;
-            }
-            
-            // For demo, use a simple identifier - in production, get Discord ID
-            const identifier = prompt("Enter your Discord ID for verification:");
-            if (!identifier) {
-                errorDiv.textContent = '❌ Discord ID required';
-                return;
-            }
-            
-            const whitelisted = await checkWhitelist(identifier);
-            if (!whitelisted) {
-                document.getElementById('loginBox').classList.add('hidden');
-                document.getElementById('accessDenied').classList.remove('hidden');
-                return;
-            }
-            
-            isAuthenticated = true;
-            currentUser = identifier;
-            document.getElementById('loginBox').classList.add('hidden');
-            document.getElementById('adminPanel').classList.remove('hidden');
-            loadScripts();
-            loadWhitelist();
+    }
+    
+    if (keyData.hwid && keyData.hwid !== hwid) {
+        return res.status(403).json({ error: 'HWID mismatch' });
+    }
+    
+    if (!keyData.hwid) {
+        dbRun(`UPDATE keys SET hwid = ?, hwid_bound_at = CURRENT_TIMESTAMP WHERE key_string = ?`, [hwid, key]);
+    }
+    
+    // Fetch script
+    const script = dbGet(`SELECT content FROM scripts WHERE game_id = ?`, [gameId]);
+    if (!script) {
+        return res.status(404).json({ error: 'Script not found for this game' });
+    }
+    
+    res.json({ script: script.content });
+});
+
+// ============================================
+// KEY GENERATION & VALIDATION
+// ============================================
+
+app.post('/api/generate-key', (req, res) => {
+    console.log('📥 /api/generate-key was called!');
+    
+    if (!db) {
+        console.error('❌ Database not ready yet');
+        return res.status(500).json({ success: false, error: 'Database not ready' });
+    }
+    
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const segments = [];
+    for (let i = 0; i < 4; i++) {
+        let segment = '';
+        for (let j = 0; j < 4; j++) {
+            segment += chars.charAt(Math.floor(Math.random() * chars.length));
         }
-        
-        function logout() {
-            isAuthenticated = false;
-            currentUser = null;
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('loginBox').classList.remove('hidden');
-            document.getElementById('passwordInput').value = '';
+        segments.push(segment);
+    }
+    const keyString = 'ECLIPSE-' + segments.join('-');
+    
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    
+    try {
+        dbRun(`INSERT INTO keys (key_string, key_type, duration_days, expires_at, is_active) VALUES (?, 'timed', 1, ?, 1)`, [keyString, expiresAt]);
+        console.log(`✅ Key generated and saved: ${keyString}`);
+        res.json({ success: true, key: keyString });
+    } catch (error) {
+        console.error('❌ Failed to save key:', error);
+        res.status(500).json({ success: false, error: 'Database error' });
+    }
+});
+
+app.post('/api/validate', (req, res) => {
+    const { key, hwid } = req.body;
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    
+    if (!key || !hwid) {
+        return res.json({ code: 'INVALID_REQUEST', message: 'Missing key or HWID' });
+    }
+    
+    if (!db) {
+        return res.json({ code: 'DATABASE_ERROR', message: 'Database not ready' });
+    }
+    
+    const keyData = dbGet(`
+        SELECT k.*, u.blacklisted, u.blacklist_reason 
+        FROM keys k
+        LEFT JOIN users u ON k.discord_id = u.discord_id
+        WHERE k.key_string = ?
+    `, [key]);
+    
+    if (!keyData) {
+        dbRun(`INSERT INTO hwid_logs (key_string, hwid, ip) VALUES (?, ?, ?)`, [key, hwid, clientIp]);
+        return res.json({ code: 'KEY_INVALID', message: 'Key not found' });
+    }
+    
+    if (keyData.blacklisted) {
+        dbRun(`UPDATE keys SET is_active = 0 WHERE key_string = ?`, [key]);
+        return res.json({ code: 'USER_BLACKLISTED', message: `You are blacklisted from Eclipse.\nReason: ${keyData.blacklist_reason || 'No reason provided'}` });
+    }
+    
+    if (!keyData.is_active) {
+        return res.json({ code: 'KEY_INACTIVE', message: 'Key is not active' });
+    }
+    
+    if (keyData.key_type === 'timed' && keyData.expires_at) {
+        if (new Date(keyData.expires_at) < new Date()) {
+            dbRun(`UPDATE keys SET is_active = 0 WHERE key_string = ?`, [key]);
+            return res.json({ code: 'KEY_EXPIRED', message: 'Key has expired' });
         }
+    }
+    
+    if (keyData.hwid && keyData.hwid !== hwid) {
+        dbRun(`INSERT INTO hwid_logs (key_string, hwid, ip) VALUES (?, ?, ?)`, [key, hwid, clientIp]);
+        return res.json({ code: 'HWID_MISMATCH', message: 'HWID does not match' });
+    }
+    
+    if (!keyData.hwid) {
+        dbRun(`UPDATE keys SET hwid = ?, hwid_bound_at = CURRENT_TIMESTAMP WHERE key_string = ?`, [hwid, key]);
+    }
+    
+    dbRun(`INSERT INTO hwid_logs (key_string, hwid, ip) VALUES (?, ?, ?)`, [key, hwid, clientIp]);
+    
+    res.json({ 
+        code: 'KEY_VALID', 
+        message: 'Success',
+        key_type: keyData.key_type,
+        expires_at: keyData.expires_at
+    });
+});
+
+app.get('/', (req, res) => {
+    res.send('Eclipse System API is online!');
+});
+
+// ============================================
+// DISCORD BOT
+// ============================================
+function startDiscordBot() {
+    console.log('=== DISCORD BOT STARTUP ===');
+    console.log('Node version:', process.version);
+    console.log('Discord.js version:', require('discord.js').version);
+
+    const client = new Client({
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.MessageContent,
+            GatewayIntentBits.GuildMembers
+        ]
+    });
+
+    function generateKey() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const segments = [];
+        for (let i = 0; i < 4; i++) {
+            let segment = '';
+            for (let j = 0; j < 4; j++) {
+                segment += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            segments.push(segment);
+        }
+        return 'ECLIPSE-' + segments.join('-');
+    }
+
+    async function registerCommands() {
+        const commands = [
+            new SlashCommandBuilder()
+                .setName('setpanel')
+                .setDescription('Create the Eclipse key system panel'),
+            
+            new SlashCommandBuilder()
+                .setName('generatekey')
+                .setDescription('Generate a new key (Admin only)')
+                .addStringOption(option =>
+                    option.setName('type')
+                        .setDescription('Key duration')
+                        .setRequired(true)
+                        .addChoices(
+                            { name: '💎 Permanent', value: 'permanent' },
+                            { name: '📅 1 Day', value: 'timed_1' },
+                            { name: '📅 3 Days', value: 'timed_3' },
+                            { name: '📅 7 Days', value: 'timed_7' },
+                            { name: '📅 30 Days', value: 'timed_30' }
+                        ))
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('User to give key to (optional)')
+                        .setRequired(false)),
+            
+            new SlashCommandBuilder()
+                .setName('delkey')
+                .setDescription('Delete a key (Admin only)')
+                .addStringOption(option =>
+                    option.setName('key')
+                        .setDescription('The key to delete')
+                        .setRequired(true)),
+            
+            new SlashCommandBuilder()
+                .setName('keys')
+                .setDescription('View all keys in the system (Admin only)'),
+            
+            new SlashCommandBuilder()
+                .setName('userkeys')
+                .setDescription('View keys owned by a user (Admin only)')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('The user to check')
+                        .setRequired(true)),
+            
+            new SlashCommandBuilder()
+                .setName('blacklist')
+                .setDescription('Blacklist a user (Admin only)')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('User to blacklist')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('reason')
+                        .setDescription('Reason for blacklist')
+                        .setRequired(false)),
+            
+            new SlashCommandBuilder()
+                .setName('whitelist')
+                .setDescription('Remove a user from blacklist (Admin only)')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('User to whitelist')
+                        .setRequired(true)),
+            
+            new SlashCommandBuilder()
+                .setName('stats')
+                .setDescription('View system statistics (Admin only)')
+        ];
+
+        const token = process.env.TOKEN;
+        const rest = new REST({ version: '10' }).setToken(token);
         
-        // ============================================
-        // SCRIPT MANAGEMENT
-        // ============================================
-        async function loadScripts() {
-            const listDiv = document.getElementById('scriptList');
-            try {
-                const response = await fetch(`${API_URL}/api/admin/scripts`, {
-                    headers: { 'Authorization': `Bearer ${currentUser}` }
-                });
-                const scripts = await response.json();
-                
-                if (scripts.length === 0) {
-                    listDiv.innerHTML = '<p style="color: #a0a0c0; text-align: center;">No scripts uploaded yet.</p>';
-                    return;
+        try {
+            console.log('Registering slash commands...');
+            await rest.put(
+                Routes.applicationGuildCommands(CONFIG.CLIENT_ID, CONFIG.SERVER_ID),
+                { body: commands.map(cmd => cmd.toJSON()) }
+            );
+            console.log('Slash commands registered!');
+        } catch (error) {
+            console.error('Error registering commands:', error);
+        }
+    }
+
+    client.once('ready', async () => {
+        console.log(`✅ ${client.user.tag} is online!`);
+        await registerCommands();
+    });
+
+    client.on('interactionCreate', async interaction => {
+        if (interaction.isCommand()) {
+            const { commandName } = interaction;
+            
+            if (commandName === 'setpanel') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ You need Administrator permissions!', flags: 64 });
                 }
                 
-                listDiv.innerHTML = scripts.map(s => `
-                    <div class="script-item">
-                        <div class="script-info">
-                            <div class="script-name">${s.name}</div>
-                            <div class="script-id">Game ID: ${s.gameId}</div>
-                        </div>
-                        <div>
-                            <button class="btn btn-small btn-danger" onclick="deleteScript('${s.gameId}')">🗑️ Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                listDiv.innerHTML = '<p style="color: #ff6b6b;">Failed to load scripts</p>';
-            }
-        }
-        
-        async function uploadScript(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            const gameId = file.name.replace('.lua', '');
-            if (!/^\d+$/.test(gameId)) {
-                alert('File name must be the Game ID (numbers only)!');
-                return;
-            }
-            
-            const statusDiv = document.getElementById('uploadStatus');
-            statusDiv.textContent = 'Uploading...';
-            
-            const content = await file.text();
-            
-            try {
-                const response = await fetch(`${API_URL}/api/admin/upload`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentUser}`
-                    },
-                    body: JSON.stringify({ gameId, content })
-                });
+                const embed = new EmbedBuilder()
+                    .setTitle('🌑 E C L I P S E')
+                    .setDescription('Key System')
+                    .setColor(0xd4af37)
+                    .addFields(
+                        { name: 'Welcome', value: 'Welcome to the Eclipse key system.\nUse the buttons below to manage your access.' },
+                        { name: 'Need help?', value: `Open a ticket in <#${CONFIG.SUPPORT_CHANNEL_ID}>\nReport bugs in <#${CONFIG.BUGS_CHANNEL_ID}>` }
+                    )
+                    .setFooter({ text: `v${CONFIG.SCRIPT_VERSION}` })
+                    .setTimestamp();
                 
-                const data = await response.json();
-                if (data.success) {
-                    statusDiv.textContent = `✅ ${file.name} uploaded successfully!`;
-                    loadScripts();
-                } else {
-                    statusDiv.textContent = `❌ Upload failed: ${data.error}`;
+                const row = new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('redeem_key')
+                            .setLabel('Redeem Key')
+                            .setEmoji('🔑')
+                            .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId('get_script')
+                            .setLabel('Get Script')
+                            .setEmoji('🚀')
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('get_free_key')
+                            .setLabel('Get Free Key')
+                            .setEmoji('🌐')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId('reset_hwid')
+                            .setLabel('Reset HWID')
+                            .setEmoji('🔄')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId('get_stats')
+                            .setLabel('Stats')
+                            .setEmoji('📊')
+                            .setStyle(ButtonStyle.Secondary)
+                    );
+                
+                await interaction.reply({ embeds: [embed], components: [row] });
+            }
+            
+            if (commandName === 'generatekey') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
                 }
-            } catch (e) {
-                statusDiv.textContent = '❌ Upload failed: Connection error';
-            }
-            
-            input.value = '';
-            setTimeout(() => statusDiv.textContent = '', 3000);
-        }
-        
-        async function deleteScript(gameId) {
-            if (!confirm(`Delete script for Game ID ${gameId}?`)) return;
-            
-            try {
-                await fetch(`${API_URL}/api/admin/delete`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentUser}`
-                    },
-                    body: JSON.stringify({ gameId })
-                });
-                loadScripts();
-            } catch (e) {
-                alert('Failed to delete script');
-            }
-        }
-        
-        // ============================================
-        // WHITELIST MANAGEMENT
-        // ============================================
-        async function loadWhitelist() {
-            const listDiv = document.getElementById('whitelistList');
-            try {
-                const response = await fetch(`${API_URL}/api/admin/whitelist`, {
-                    headers: { 'Authorization': `Bearer ${currentUser}` }
-                });
-                const whitelist = await response.json();
                 
-                listDiv.innerHTML = whitelist.map(w => `
-                    <div class="whitelist-item">
-                        <span>${w.identifier}</span>
-                        <button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${w.identifier}')" style="padding: 4px 10px;">Remove</button>
-                    </div>
-                `).join('');
-            } catch (e) {
-                listDiv.innerHTML = '<p style="color: #ff6b6b;">Failed to load whitelist</p>';
+                const keyType = interaction.options.getString('type');
+                const targetUser = interaction.options.getUser('user');
+                
+                let keyString = generateKey();
+                let duration = null;
+                let expiresAt = null;
+                let type = 'permanent';
+                let durationText = 'Permanent';
+                
+                if (keyType === 'timed_1') {
+                    type = 'timed';
+                    duration = 1;
+                    expiresAt = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString();
+                    durationText = '1 Day';
+                } else if (keyType === 'timed_3') {
+                    type = 'timed';
+                    duration = 3;
+                    expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+                    durationText = '3 Days';
+                } else if (keyType === 'timed_7') {
+                    type = 'timed';
+                    duration = 7;
+                    expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+                    durationText = '7 Days';
+                } else if (keyType === 'timed_30') {
+                    type = 'timed';
+                    duration = 30;
+                    expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+                    durationText = '30 Days';
+                }
+                
+                dbRun(`INSERT INTO keys (key_string, key_type, duration_days, expires_at, created_by) VALUES (?, ?, ?, ?, ?)`, 
+                    [keyString, type, duration, expiresAt, interaction.user.id]);
+                
+                let replyContent = `✅ **Key Generated**\n\`\`\`${keyString}\`\`\`\nType: ${durationText}`;
+                
+                if (targetUser) {
+                    try {
+                        await targetUser.send(`🌑 **Eclipse Key**\nYour key: \`${keyString}\`\nType: ${durationText}\n\nRedeem it in ${CONFIG.DISCORD_INVITE}`);
+                        replyContent += `\n✅ Key sent to ${targetUser.username}`;
+                    } catch (e) {
+                        replyContent += `\n⚠️ Could not DM user`;
+                    }
+                }
+                
+                await interaction.reply({ content: replyContent, flags: 64 });
             }
-        }
-        
-        async function addToWhitelist() {
-            const input = document.getElementById('whitelistUserInput');
-            const identifier = input.value.trim();
-            if (!identifier) return;
             
-            try {
-                await fetch(`${API_URL}/api/admin/whitelist/add`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentUser}`
-                    },
-                    body: JSON.stringify({ identifier })
-                });
-                input.value = '';
-                loadWhitelist();
-            } catch (e) {
-                alert('Failed to add to whitelist');
+            if (commandName === 'delkey') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
+                }
+                const keyToDelete = interaction.options.getString('key');
+                const keyCheck = dbGet(`SELECT key_string FROM keys WHERE key_string = ?`, [keyToDelete]);
+                if (!keyCheck) {
+                    return interaction.reply({ content: '❌ Key not found!', flags: 64 });
+                }
+                dbRun(`DELETE FROM keys WHERE key_string = ?`, [keyToDelete]);
+                await interaction.reply({ content: `✅ Key \`${keyToDelete}\` has been deleted.`, flags: 64 });
+            }
+            
+            if (commandName === 'keys') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
+                }
+                const allKeys = dbAll(`SELECT key_string, key_type, expires_at, discord_id, is_active FROM keys ORDER BY created_at DESC LIMIT 25`);
+                if (allKeys.length === 0) {
+                    return interaction.reply({ content: 'No keys in the database.', flags: 64 });
+                }
+                let description = '';
+                for (const k of allKeys) {
+                    const owner = k.discord_id ? `<@${k.discord_id}>` : 'Not redeemed';
+                    const expiry = k.expires_at ? `<t:${Math.floor(new Date(k.expires_at).getTime() / 1000)}:R>` : 'Permanent';
+                    description += `**${k.key_string}**\nType: ${k.key_type} | Owner: ${owner} | Expires: ${expiry} | Active: ${k.is_active ? '✅' : '❌'}\n\n`;
+                }
+                const embed = new EmbedBuilder().setTitle('🔑 All Keys').setColor(0xd4af37).setDescription(description);
+                await interaction.reply({ embeds: [embed], flags: 64 });
+            }
+            
+            if (commandName === 'userkeys') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
+                }
+                const user = interaction.options.getUser('user');
+                const userKeys = dbAll(`SELECT key_string, key_type, expires_at, is_active FROM keys WHERE discord_id = ?`, [user.id]);
+                if (userKeys.length === 0) {
+                    return interaction.reply({ content: `❌ No keys found for ${user.username}.`, flags: 64 });
+                }
+                let description = `**Keys for ${user.username}:**\n\n`;
+                for (const k of userKeys) {
+                    const expiry = k.expires_at ? `<t:${Math.floor(new Date(k.expires_at).getTime() / 1000)}:R>` : 'Permanent';
+                    description += `**${k.key_string}** - ${k.key_type} - Expires: ${expiry} - Active: ${k.is_active ? '✅' : '❌'}\n`;
+                }
+                const embed = new EmbedBuilder().setTitle(`🔑 Keys for ${user.username}`).setColor(0xd4af37).setDescription(description);
+                await interaction.reply({ embeds: [embed], flags: 64 });
+            }
+            
+            if (commandName === 'blacklist') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
+                }
+                
+                const user = interaction.options.getUser('user');
+                const reason = interaction.options.getString('reason') || 'No reason provided';
+                
+                dbRun(`INSERT INTO users (discord_id, blacklisted, blacklist_reason) VALUES (?, 1, ?) ON CONFLICT(discord_id) DO UPDATE SET blacklisted = 1, blacklist_reason = ?`, 
+                    [user.id, reason, reason]);
+                
+                dbRun(`UPDATE keys SET is_active = 0 WHERE discord_id = ?`, [user.id]);
+                
+                await interaction.reply({ content: `✅ ${user.username} has been blacklisted.\nReason: ${reason}\nAll their keys have been deactivated.`, flags: 64 });
+            }
+            
+            if (commandName === 'whitelist') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
+                }
+                
+                const user = interaction.options.getUser('user');
+                
+                dbRun(`UPDATE users SET blacklisted = 0, blacklist_reason = NULL WHERE discord_id = ?`, [user.id]);
+                
+                await interaction.reply({ content: `✅ ${user.username} has been removed from blacklist.`, flags: 64 });
+            }
+            
+            if (commandName === 'stats') {
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({ content: '❌ Administrator only!', flags: 64 });
+                }
+                
+                const userCount = dbGet(`SELECT COUNT(*) as count FROM users`).count;
+                const keyCount = dbGet(`SELECT COUNT(*) as count FROM keys WHERE is_active = 1`).count;
+                const permKeys = dbGet(`SELECT COUNT(*) as count FROM keys WHERE key_type = 'permanent' AND is_active = 1`).count;
+                const timedKeys = dbGet(`SELECT COUNT(*) as count FROM keys WHERE key_type = 'timed' AND is_active = 1`).count;
+                const blacklistedCount = dbGet(`SELECT COUNT(*) as count FROM users WHERE blacklisted = 1`).count;
+                const scriptCount = dbGet(`SELECT COUNT(*) as count FROM scripts`).count;
+                
+                const embed = new EmbedBuilder()
+                    .setTitle('📊 Eclipse System Statistics')
+                    .setColor(0xd4af37)
+                    .addFields(
+                        { name: 'Total Users', value: `${userCount}`, inline: true },
+                        { name: 'Active Keys', value: `${keyCount}`, inline: true },
+                        { name: 'Blacklisted', value: `${blacklistedCount}`, inline: true },
+                        { name: 'Permanent Keys', value: `${permKeys}`, inline: true },
+                        { name: 'Timed Keys', value: `${timedKeys}`, inline: true },
+                        { name: 'Scripts', value: `${scriptCount}`, inline: true },
+                        { name: 'Script Version', value: CONFIG.SCRIPT_VERSION, inline: true },
+                        { name: 'HWID Cooldown', value: `24 hours`, inline: true }
+                    )
+                    .setTimestamp();
+                
+                await interaction.reply({ embeds: [embed], flags: 64 });
             }
         }
         
-        async function removeFromWhitelist(identifier) {
-            try {
-                await fetch(`${API_URL}/api/admin/whitelist/remove`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${currentUser}`
-                    },
-                    body: JSON.stringify({ identifier })
+        if (interaction.isButton()) {
+            const { customId } = interaction;
+            
+            const blacklistCheck = dbGet(`SELECT blacklisted, blacklist_reason FROM users WHERE discord_id = ?`, [interaction.user.id]);
+            if (blacklistCheck && blacklistCheck.blacklisted) {
+                return interaction.reply({ 
+                    content: `❌ You are blacklisted from Eclipse.\nReason: ${blacklistCheck.blacklist_reason}`, 
+                    flags: 64 
                 });
-                loadWhitelist();
-            } catch (e) {
-                alert('Failed to remove from whitelist');
+            }
+            
+            if (customId === 'redeem_key') {
+                const modal = new ModalBuilder()
+                    .setCustomId('key_modal')
+                    .setTitle('Redeem Your Key');
+                
+                const keyInput = new TextInputBuilder()
+                    .setCustomId('key_input')
+                    .setLabel('Enter your Eclipse key')
+                    .setPlaceholder('ECLIPSE-XXXX-XXXX-XXXX')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+                
+                const row = new ActionRowBuilder().addComponents(keyInput);
+                modal.addComponents(row);
+                
+                await interaction.showModal(modal);
+            }
+            
+            if (customId === 'get_script') {
+                const keyCheck = dbGet(`SELECT key_string, key_type, expires_at FROM keys WHERE discord_id = ? AND is_active = 1`, [interaction.user.id]);
+                
+                if (!keyCheck) {
+                    return interaction.reply({ 
+                        content: '❌ You don\'t have an active key. Click **🌐 Get Free Key** to get one!', 
+                        flags: 64 
+                    });
+                }
+                
+                if (keyCheck.key_type === 'timed' && keyCheck.expires_at) {
+                    if (new Date(keyCheck.expires_at) < new Date()) {
+                        dbRun(`UPDATE keys SET is_active = 0 WHERE key_string = ?`, [keyCheck.key_string]);
+                        return interaction.reply({ content: '❌ Your key has expired! Get a new one with **🌐 Get Free Key**', flags: 64 });
+                    }
+                }
+                
+                const loaderCode = `script_key="${keyCheck.key_string}";\nloadstring(game:HttpGet("https://raw.githubusercontent.com/landonmobley04302012-sys/Eclipse-Loader/main/loader.lua"))()`;
+                
+                const embed = new EmbedBuilder()
+                    .setTitle('🚀 Your Eclipse Loader')
+                    .setDescription('Copy the code below and paste it into your executor:')
+                    .setColor(0xd4af37)
+                    .addFields({ 
+                        name: 'Loader', 
+                        value: `\`\`\`lua\n${loaderCode}\n\`\`\`` 
+                    })
+                    .setFooter({ text: 'This loader is bound to your key and HWID' });
+                
+                await interaction.reply({ embeds: [embed], flags: 64 });
+            }
+            
+            if (customId === 'get_free_key') {
+                const embed = new EmbedBuilder()
+                    .setTitle('🌐 Get Your Free Eclipse Key')
+                    .setDescription(`Click the link below to get a free 24-hour key!\n\n${CONFIG.WEBSITE_URL}`)
+                    .setColor(0xd4af37)
+                    .addFields(
+                        { name: 'Instructions', value: '1. Click the link\n2. Complete the verification\n3. Copy your key\n4. Click **🔑 Redeem Key** here to activate' }
+                    )
+                    .setFooter({ text: 'Keys expire after 24 hours' });
+                
+                await interaction.reply({ embeds: [embed], flags: 64 });
+            }
+            
+            if (customId === 'reset_hwid') {
+                const keyCheck = dbGet(`SELECT key_string, last_hwid_reset FROM keys WHERE discord_id = ? AND is_active = 1`, [interaction.user.id]);
+                
+                if (!keyCheck) {
+                    return interaction.reply({ content: '❌ No active key found!', flags: 64 });
+                }
+                
+                if (keyCheck.last_hwid_reset) {
+                    const lastReset = new Date(keyCheck.last_hwid_reset);
+                    const cooldownHours = 24;
+                    const nextReset = new Date(lastReset.getTime() + cooldownHours * 60 * 60 * 1000);
+                    
+                    if (nextReset > new Date()) {
+                        const timeLeft = Math.ceil((nextReset - new Date()) / (60 * 60 * 1000));
+                        return interaction.reply({ 
+                            content: `⏳ HWID reset on cooldown. Try again in ${timeLeft} hours.`, 
+                            flags: 64 
+                        });
+                    }
+                }
+                
+                dbRun(`UPDATE keys SET hwid = NULL, hwid_bound_at = NULL, hwid_reset_count = hwid_reset_count + 1, last_hwid_reset = CURRENT_TIMESTAMP WHERE key_string = ?`, [keyCheck.key_string]);
+                
+                await interaction.reply({ 
+                    content: '✅ **HWID has been reset!**\nYou can now use your key on a new device. Re-inject to bind.', 
+                    flags: 64 
+                });
+            }
+            
+            if (customId === 'get_stats') {
+                const keyData = dbGet(`SELECT key_string, key_type, expires_at, redeemed_at, hwid FROM keys WHERE discord_id = ? AND is_active = 1`, [interaction.user.id]);
+                
+                if (!keyData) {
+                    return interaction.reply({ content: '❌ No active key found! Click **🌐 Get Free Key** to get one!', flags: 64 });
+                }
+                
+                const embed = new EmbedBuilder()
+                    .setTitle('📊 Your Key Status')
+                    .setColor(0xd4af37);
+                
+                let maskedKey = keyData.key_string.slice(0, 8) + '-XXXX-XXXX-' + keyData.key_string.slice(-4);
+                embed.addFields({ name: '🔑 Key', value: maskedKey });
+                
+                if (keyData.key_type === 'permanent') {
+                    embed.addFields({ name: '⭐ Status', value: 'Your key is **PERMANENT**' });
+                } else if (keyData.key_type === 'timed') {
+                    const expires = new Date(keyData.expires_at);
+                    const now = new Date();
+                    const diffDays = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.ceil((expires - now) / (1000 * 60 * 60));
+                    
+                    if (expires > now) {
+                        embed.addFields({ name: '⏰ Time Remaining', value: `${diffDays} days (${diffHours} hours)` });
+                    } else {
+                        embed.addFields({ name: '❌ Status', value: 'Expired' });
+                    }
+                }
+                
+                embed.addFields({ 
+                    name: '💻 HWID', 
+                    value: keyData.hwid ? 'Bound to this PC' : 'Not bound yet (will bind on first use)' 
+                });
+                
+                if (keyData.redeemed_at) {
+                    embed.addFields({ name: '📅 Redeemed', value: `<t:${Math.floor(new Date(keyData.redeemed_at).getTime() / 1000)}:D>` });
+                }
+                
+                await interaction.reply({ embeds: [embed], flags: 64 });
             }
         }
-    </script>
-</body>
-</html>
+        
+        if (interaction.isModalSubmit()) {
+            if (interaction.customId === 'key_modal') {
+                const keyInput = interaction.fields.getTextInputValue('key_input');
+                
+                const blacklistCheck = dbGet(`SELECT blacklisted, blacklist_reason FROM users WHERE discord_id = ?`, [interaction.user.id]);
+                if (blacklistCheck && blacklistCheck.blacklisted) {
+                    return interaction.reply({ 
+                        content: `❌ You are blacklisted from Eclipse.\nReason: ${blacklistCheck.blacklist_reason}`, 
+                        flags: 64 
+                    });
+                }
+                
+                const keyCheck = dbGet(`SELECT key_string, key_type, discord_id, is_active, expires_at FROM keys WHERE key_string = ?`, [keyInput]);
+                
+                if (!keyCheck) {
+                    return interaction.reply({ content: '❌ Invalid key!', flags: 64 });
+                }
+                
+                if (!keyCheck.is_active) {
+                    return interaction.reply({ content: '❌ This key is no longer active!', flags: 64 });
+                }
+                
+                if (keyCheck.discord_id && keyCheck.discord_id !== interaction.user.id) {
+                    return interaction.reply({ content: '❌ This key is already redeemed by another user!', flags: 64 });
+                }
+                
+                if (keyCheck.key_type === 'timed' && keyCheck.expires_at) {
+                    if (new Date(keyCheck.expires_at) < new Date()) {
+                        dbRun(`UPDATE keys SET is_active = 0 WHERE key_string = ?`, [keyInput]);
+                        return interaction.reply({ content: '❌ This key has expired!', flags: 64 });
+                    }
+                }
+                
+                dbRun(`UPDATE keys SET discord_id = ?, redeemed_at = CURRENT_TIMESTAMP WHERE key_string = ?`, [interaction.user.id, keyInput]);
+                dbRun(`INSERT OR IGNORE INTO users (discord_id) VALUES (?)`, [interaction.user.id]);
+                
+                await interaction.reply({ 
+                    content: '✅ **Key redeemed successfully!**\nClick **🚀 Get Script** to receive your loader.', 
+                    flags: 64 
+                });
+            }
+        }
+    });
+
+    const token = process.env.TOKEN;
+    console.log('Attempting to log in to Discord...');
+    
+    client.login(token)
+        .then(() => console.log('✅ Login successful!'))
+        .catch(error => console.error('❌ LOGIN FAILED:', error.message));
+}
+
+app.listen(API_PORT, '0.0.0.0', () => {
+    console.log(`Web server on port ${API_PORT}`);
+    console.log(`API endpoints available at:`);
+    console.log(`  POST /api/generate-key`);
+    console.log(`  POST /api/validate`);
+    console.log(`  POST /api/script`);
+    console.log(`  Admin routes: /api/admin/*`);
+});
