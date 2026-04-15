@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eclipse · Your Key</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #0a0a0a 0%, #12122a 100%);
             min-height: 100vh;
@@ -39,16 +35,8 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .success-icon {
-            font-size: 60px;
-            margin-bottom: 15px;
-        }
-        .title {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 25px;
-        }
+        .success-icon { font-size: 60px; margin-bottom: 15px; }
+        .title { color: #ffffff; font-size: 24px; font-weight: 600; margin-bottom: 25px; }
         .key-box {
             background: rgba(0, 0, 0, 0.4);
             border: 2px solid rgba(212, 175, 55, 0.5);
@@ -98,11 +86,7 @@
             text-align: left;
             margin-bottom: 20px;
         }
-        .instructions h3 {
-            color: #ffffff;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
+        .instructions h3 { color: #ffffff; margin-bottom: 15px; font-size: 16px; }
         .step {
             display: flex;
             align-items: flex-start;
@@ -125,19 +109,9 @@
             font-size: 12px;
             flex-shrink: 0;
         }
-        .discord-link {
-            color: #d4af37;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .discord-link:hover {
-            text-decoration: underline;
-        }
-        .footer {
-            color: #606080;
-            font-size: 12px;
-            margin-top: 15px;
-        }
+        .discord-link { color: #d4af37; text-decoration: none; font-weight: 500; }
+        .discord-link:hover { text-decoration: underline; }
+        .footer { color: #606080; font-size: 12px; margin-top: 15px; }
         .copy-feedback {
             color: #4caf50;
             font-size: 14px;
@@ -145,9 +119,8 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
-        .copy-feedback.show {
-            opacity: 1;
-        }
+        .copy-feedback.show { opacity: 1; }
+        .error-message { color: #ff6b6b; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -165,6 +138,7 @@
         
         <button class="btn-copy" id="copyBtn">📋 Copy Key to Clipboard</button>
         <div class="copy-feedback" id="copyFeedback">Key copied!</div>
+        <div class="error-message" id="errorMessage"></div>
         
         <div class="instructions">
             <h3>📌 How to Redeem:</h3>
@@ -199,15 +173,21 @@
         // ============================================
         // CONFIGURATION - YOUR BACKEND URL
         // ============================================
-       const API_URL = "https://eclipse-discordbot.up.railway.app";
+        const API_URL = "https://eclipse-discordbot.up.railway.app";
         // ============================================
 
         let currentKey = "";
 
         async function generateKey() {
             const keyDisplay = document.getElementById('keyDisplay');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.textContent = '';
+            keyDisplay.textContent = 'Generating...';
             
             try {
+                console.log('Fetching key from:', `${API_URL}/api/generate-key`);
+                
                 const response = await fetch(`${API_URL}/api/generate-key`, {
                     method: 'POST',
                     headers: {
@@ -215,17 +195,22 @@
                     }
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('Response:', data);
                 
                 if (data.success && data.key) {
                     currentKey = data.key;
                     keyDisplay.textContent = currentKey;
                 } else {
-                    currentKey = generateFallbackKey();
-                    keyDisplay.textContent = currentKey;
+                    throw new Error(data.error || 'Failed to generate key');
                 }
             } catch (error) {
-                console.error('API not reachable, using fallback:', error);
+                console.error('API error:', error);
+                errorMessage.textContent = '⚠️ Could not connect to server. Using offline key.';
                 currentKey = generateFallbackKey();
                 keyDisplay.textContent = currentKey;
             }
@@ -257,6 +242,7 @@
             });
         });
 
+        // Generate key when page loads
         generateKey();
     </script>
 </body>
