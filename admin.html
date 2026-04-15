@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclipse Admin · Script Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #12122a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(20, 20, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .logo h1 {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #d4af37 0%, #f5e6a3 50%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #a0a0c0;
+            font-size: 14px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 15px;
+        }
+        .login-box, .admin-panel {
+            transition: all 0.3s ease;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #d4af37 0%, #f5e6a3 100%);
+            color: #0a0a0a;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: white;
+        }
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            width: auto;
+        }
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .success-message {
+            color: #4caf50;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .script-list {
+            margin: 20px 0;
+        }
+        .script-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .script-info {
+            color: white;
+        }
+        .script-name {
+            font-weight: 600;
+            color: #d4af37;
+        }
+        .script-id {
+            font-size: 12px;
+            color: #a0a0c0;
+        }
+        .upload-area {
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: rgba(212, 175, 55, 0.6);
+            background: rgba(212, 175, 55, 0.05);
+        }
+        .upload-area input {
+            display: none;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .upload-text {
+            color: #c0c0e0;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .access-denied h2 {
+            color: #ff6b6b;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .access-denied p {
+            color: #a0a0c0;
+            margin-bottom: 30px;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .whitelist-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .whitelist-title {
+            color: #d4af37;
+            margin-bottom: 15px;
+        }
+        .whitelist-input {
+            display: flex;
+            gap: 10px;
+        }
+        .whitelist-input input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: white;
+        }
+        .whitelist-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .whitelist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin-bottom: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>🌑 ECLIPSE ADMIN</h1>
+        </div>
+        <div class="subtitle">Script Manager · Restricted Access</div>
+
+        <!-- Access Denied Message (shown to unauthorized users) -->
+        <div id="accessDenied" class="access-denied hidden">
+            <h2>⛔ ACCESS DENIED</h2>
+            <p>You are not whitelisted to view this page.</p>
+            <p style="font-size: 12px; color: #606080;">If you believe this is an error, contact the system administrator.</p>
+        </div>
+
+        <!-- Login Box -->
+        <div id="loginBox" class="login-box">
+            <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="if(event.key==='Enter') login()">
+            <button class="btn" onclick="login()">🔐 Login</button>
+            <div id="loginError" class="error-message"></div>
+        </div>
+
+        <!-- Admin Panel (hidden until login) -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <div class="header-actions">
+                <h3 style="color: #d4af37;">📜 Script Management</h3>
+                <button class="btn btn-small" onclick="logout()">🚪 Logout</button>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Click to upload .lua script<br><small style="color: #8080a0;">File name must be the Game ID (e.g., 13822889.lua)</small></div>
+                <input type="file" id="fileInput" accept=".lua" onchange="uploadScript(this)">
+            </div>
+            
+            <div id="uploadStatus" class="success-message"></div>
+            
+            <!-- Script List -->
+            <div class="script-list" id="scriptList">
+                <p style="color: #a0a0c0; text-align: center;">Loading scripts...</p>
+            </div>
+            
+            <!-- Whitelist Management -->
+            <div class="whitelist-section">
+                <div class="whitelist-title">👥 Admin Whitelist</div>
+                <div class="whitelist-input">
+                    <input type="text" id="whitelistUserInput" placeholder="Enter Discord ID or username">
+                    <button class="btn btn-small" onclick="addToWhitelist()">Add</button>
+                </div>
+                <div class="whitelist-list" id="whitelistList">
+                    <p style="color: #a0a0c0;">Loading whitelist...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const ADMIN_PASSWORD = "EclipseAdmin2024!"; // CHANGE THIS!
+        const API_URL = "https://eclipse-discordbot-production.up.railway.app";
+        const GITHUB_TOKEN = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN"; // Get from GitHub Settings → Developer settings → Tokens
+        const GITHUB_REPO = "landonmobley04302012-sys/Eclipse-Scripts";
+        
+        // ============================================
+        // SESSION MANAGEMENT
+        // ============================================
+        let isAuthenticated = false;
+        let currentUser = null;
+        
+        // Check if user is whitelisted
+        async function checkWhitelist(identifier) {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/check-whitelist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier })
+                });
+                const data = await response.json();
+                return data.whitelisted;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        // Login function
+        async function login() {
+            const password = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password !== ADMIN_PASSWORD) {
+                errorDiv.textContent = '❌ Invalid password';
+                return;
+            }
+            
+            // For demo, use a simple identifier - in production, get Discord ID
+            const identifier = prompt("Enter your Discord ID for verification:");
+            if (!identifier) {
+                errorDiv.textContent = '❌ Discord ID required';
+                return;
+            }
+            
+            const whitelisted = await checkWhitelist(identifier);
+            if (!whitelisted) {
+                document.getElementById('loginBox').classList.add('hidden');
+                document.getElementById('accessDenied').classList.remove('hidden');
+                return;
+            }
+            
+            isAuthenticated = true;
+            currentUser = identifier;
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            loadScripts();
+            loadWhitelist();
+        }
+        
+        function logout() {
+            isAuthenticated = false;
+            currentUser = null;
+            document.getElementById('adminPanel').classList.add('hidden');
+            document.getElementById('loginBox').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+        }
+        
+        // ============================================
+        // SCRIPT MANAGEMENT
+        // ============================================
+        async function loadScripts() {
+            const listDiv = document.getElementById('scriptList');
+            try {
+                const response = await fetch(`${API_URL}/api/admin/scripts`, {
+                    headers: { 'Authorization': `Bearer ${currentUser}` }
+                });
+                const scripts = await response.json();
+                
+                if (scripts.length === 0) {
+                    listDiv.innerHTML = '<p style="color: #a0a0c0; text-align: center;">No scripts uploaded yet.</p>';
+                    return;
+                }
+                
+                listDiv.innerHTML = scripts.map(s => `
+                    <div class="script-item">
+                        <div class="script-info">
+                            <div class="script-name">${s.name}</div>
+                            <div class="script-id">Game ID: ${s.gameId}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-small btn-danger" onclick="deleteScript('${s.gameId}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                listDiv.innerHTML = '<p style="color: #ff6b6b;">Failed to load scripts</p>';
+            }
+        }
+        
+        async function uploadScript(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const gameId = file.name.replace('.lua', '');
+            if (!/^\d+$/.test(gameId)) {
+                alert('File name must be the Game ID (numbers only)!');
+                return;
+            }
+            
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.textContent = 'Uploading...';
+            
+            const content = await file.text();
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser}`
+                    },
+                    body: JSON.stringify({ gameId, content })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.textContent = `✅ ${file.name} uploaded successfully!`;
+                    loadScripts();
+                } else {
+                    statusDiv.textContent = `❌ Upload failed: ${data.error}`;
+                }
+            } catch (e) {
+                statusDiv.textContent = '❌ Upload failed: Connection error';
+            }
+            
+            input.value = '';
+            setTimeout(() => statusDiv.textContent = '', 3000);
+        }
+        
+        async function deleteScript(gameId) {
+            if (!confirm(`Delete script for Game ID ${gameId}?`)) return;
+            
+            try {
+                await fetch(`${API_URL}/api/admin/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser}`
+                    },
+                    body: JSON.stringify({ gameId })
+                });
+                loadScripts();
+            } catch (e) {
+                alert('Failed to delete script');
+            }
+        }
+        
+        // ============================================
+        // WHITELIST MANAGEMENT
+        // ============================================
+        async function loadWhitelist() {
+            const listDiv = document.getElementById('whitelistList');
+            try {
+                const response = await fetch(`${API_URL}/api/admin/whitelist`, {
+                    headers: { 'Authorization': `Bearer ${currentUser}` }
+                });
+                const whitelist = await response.json();
+                
+                listDiv.innerHTML = whitelist.map(w => `
+                    <div class="whitelist-item">
+                        <span>${w.identifier}</span>
+                        <button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${w.identifier}')" style="padding: 4px 10px;">Remove</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                listDiv.innerHTML = '<p style="color: #ff6b6b;">Failed to load whitelist</p>';
+            }
+        }
+        
+        async function addToWhitelist() {
+            const input = document.getElementById('whitelistUserInput');
+            const identifier = input.value.trim();
+            if (!identifier) return;
+            
+            try {
+                await fetch(`${API_URL}/api/admin/whitelist/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser}`
+                    },
+                    body: JSON.stringify({ identifier })
+                });
+                input.value = '';
+                loadWhitelist();
+            } catch (e) {
+                alert('Failed to add to whitelist');
+            }
+        }
+        
+        async function removeFromWhitelist(identifier) {
+            try {
+                await fetch(`${API_URL}/api/admin/whitelist/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser}`
+                    },
+                    body: JSON.stringify({ identifier })
+                });
+                loadWhitelist();
+            } catch (e) {
+                alert('Failed to remove from whitelist');
+            }
+        }
+    </script>
+</body>
+</html>
