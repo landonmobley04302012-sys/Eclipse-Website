@@ -285,9 +285,29 @@
             
             const whitelisted = await checkWhitelist(identifier);
             if (!whitelisted) {
-                document.getElementById('loginBox').classList.add('hidden');
-                document.getElementById('accessDenied').classList.remove('hidden');
-                return;
+                // FIRST LOGIN - Auto whitelist if database is empty
+                try {
+                    const response = await fetch(`${API_URL}/api/admin/whitelist`);
+                    const currentWhitelist = await response.json();
+                    
+                    if (currentWhitelist.length === 0) {
+                        // Database is empty, auto-add this user
+                        await fetch(`${API_URL}/api/admin/whitelist/add`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ identifier })
+                        });
+                        // Continue to login - don't block
+                    } else {
+                        document.getElementById('loginBox').classList.add('hidden');
+                        document.getElementById('accessDenied').classList.remove('hidden');
+                        return;
+                    }
+                } catch (e) {
+                    document.getElementById('loginBox').classList.add('hidden');
+                    document.getElementById('accessDenied').classList.remove('hidden');
+                    return;
+                }
             }
             
             isAuthenticated = true;
