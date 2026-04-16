@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eclipse Admin · Script Manager</title>
+    <!-- CodeMirror for VS Code-style editing -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/lua/lua.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -74,10 +79,7 @@
             color: white;
         }
         .hidden { display: none !important; }
-        .access-denied {
-            text-align: center;
-            padding: 60px 20px;
-        }
+        .access-denied { text-align: center; padding: 60px 20px; }
         .access-denied h2 { color: #ff6b6b; font-size: 28px; margin-bottom: 20px; }
         .access-denied p { color: #a0a0c0; margin-bottom: 30px; }
         .header-actions {
@@ -106,9 +108,7 @@
         .upload-icon { font-size: 48px; margin-bottom: 10px; }
         .upload-text { color: #c0c0e0; }
         
-        .paste-area {
-            margin: 20px 0;
-        }
+        .paste-area { margin: 20px 0; }
         .paste-area textarea {
             width: 100%;
             height: 200px;
@@ -149,7 +149,52 @@
         .script-info { color: white; }
         .script-name { font-weight: 600; color: #d4af37; }
         .script-id { font-size: 12px; color: #a0a0c0; }
+        .script-actions { display: flex; gap: 8px; }
         
+        /* Editor Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            background: #1e1e2e;
+            border: 1px solid #d4af37;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 15px 20px;
+            background: #2a2a40;
+            border-bottom: 1px solid #d4af37;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { color: #d4af37; }
+        .modal-body { flex: 1; overflow: hidden; }
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            background: #2a2a40;
+            border-top: 1px solid #d4af37;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
         .success-message { color: #4caf50; font-size: 14px; margin-top: 10px; }
         .error-message { color: #ff6b6b; font-size: 14px; margin-top: 10px; }
     </style>
@@ -202,11 +247,90 @@
         </div>
     </div>
 
+    <!-- Editor Modal -->
+    <div id="editorModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editing: <span id="editingGameId"></span>.lua</h3>
+                <button class="btn btn-small" onclick="closeEditor()">✕ Close</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="editorTextarea"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-small" onclick="closeEditor()">Cancel</button>
+                <button class="btn btn-small" onclick="saveEditor()">💾 Save (Ctrl+S)</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const ADMIN_PASSWORD = "EclipseAdmin2024!";
         const API_URL = "https://eclipse-discordbot-production.up.railway.app";
+        const ADMIN_SECRET = "EclipseAdmin2024!SecretKey123";
         
         let isAuthenticated = false;
+        let editor = null;
+        let currentEditingGameId = null;
+        
+        // Initialize CodeMirror
+        function initEditor() {
+            const textarea = document.getElementById('editorTextarea');
+            editor = CodeMirror.fromTextArea(textarea, {
+                mode: 'lua',
+                theme: 'dracula',
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                lineWrapping: true,
+                extraKeys: {
+                    'Ctrl-S': function() { saveEditor(); return false; },
+                    'Cmd-S': function() { saveEditor(); return false; }
+                }
+            });
+        }
+        
+        function openEditor(gameId) {
+            fetch(`${API_URL}/api/admin/script?gameId=${gameId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.content !== undefined) {
+                        currentEditingGameId = gameId;
+                        document.getElementById('editingGameId').textContent = gameId;
+                        editor.setValue(data.content || '');
+                        document.getElementById('editorModal').classList.remove('hidden');
+                        setTimeout(() => editor.refresh(), 50);
+                    } else {
+                        alert('Failed to load script');
+                    }
+                })
+                .catch(e => alert('Failed to load script'));
+        }
+        
+        function closeEditor() {
+            document.getElementById('editorModal').classList.add('hidden');
+            currentEditingGameId = null;
+        }
+        
+        function saveEditor() {
+            if (!currentEditingGameId) return;
+            const content = editor.getValue();
+            
+            fetch(`${API_URL}/api/admin/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId: currentEditingGameId, content })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Saved!');
+                    loadScripts();
+                } else {
+                    alert('❌ Save failed');
+                }
+            });
+        }
         
         async function login() {
             const password = document.getElementById('passwordInput').value;
@@ -235,6 +359,7 @@
                 }
                 
                 isAuthenticated = true;
+                initEditor();
                 document.getElementById('loginBox').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
                 loadScripts();
@@ -343,7 +468,8 @@
                             <div class="script-name">${s.name}</div>
                             <div class="script-id">Game ID: ${s.gameId}</div>
                         </div>
-                        <div>
+                        <div class="script-actions">
+                            <button class="btn btn-small" onclick="openEditor('${s.gameId}')">✏️ Edit</button>
                             <button class="btn btn-small btn-danger" onclick="deleteScript('${s.gameId}')">🗑️ Delete</button>
                         </div>
                     </div>
@@ -364,6 +490,61 @@
                 loadScripts();
             } catch (e) {
                 alert('Failed to delete');
+            }
+        }
+
+        // Whitelist functions (with secret key)
+        async function addToWhitelist() {
+            const input = document.getElementById('whitelistUserInput');
+            const identifier = input.value.trim();
+            if (!identifier) return;
+            
+            try {
+                await fetch(`${API_URL}/api/admin/whitelist/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        identifier: identifier,
+                        secret: ADMIN_SECRET
+                    })
+                });
+                input.value = '';
+                loadWhitelist();
+            } catch (e) {
+                alert('Failed to add to whitelist');
+            }
+        }
+        
+        async function removeFromWhitelist(identifier) {
+            try {
+                await fetch(`${API_URL}/api/admin/whitelist/remove`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        identifier: identifier,
+                        secret: ADMIN_SECRET
+                    })
+                });
+                loadWhitelist();
+            } catch (e) {
+                alert('Failed to remove from whitelist');
+            }
+        }
+        
+        async function loadWhitelist() {
+            const listDiv = document.getElementById('whitelistList');
+            try {
+                const response = await fetch(`${API_URL}/api/admin/whitelist`);
+                const whitelist = await response.json();
+                
+                listDiv.innerHTML = whitelist.map(w => `
+                    <div class="whitelist-item">
+                        <span>${w.identifier}</span>
+                        <button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${w.identifier}')" style="padding: 4px 10px;">Remove</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                listDiv.innerHTML = '<p style="color: #ff6b6b;">Failed to load whitelist</p>';
             }
         }
     </script>
