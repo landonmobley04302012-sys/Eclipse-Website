@@ -64,10 +64,6 @@
             transition: all 0.3s ease;
             width: 100%;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
-        }
         .btn-small {
             padding: 8px 16px;
             font-size: 12px;
@@ -77,34 +73,13 @@
             background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
             color: white;
         }
-        .error-message {
-            color: #ff6b6b;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .success-message {
-            color: #4caf50;
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-        }
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
         .access-denied {
             text-align: center;
             padding: 60px 20px;
         }
-        .access-denied h2 {
-            color: #ff6b6b;
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-        .access-denied p {
-            color: #a0a0c0;
-            margin-bottom: 30px;
-        }
+        .access-denied h2 { color: #ff6b6b; font-size: 28px; margin-bottom: 20px; }
+        .access-denied p { color: #a0a0c0; margin-bottom: 30px; }
         .header-actions {
             display: flex;
             justify-content: space-between;
@@ -124,19 +99,43 @@
             border-color: rgba(212, 175, 55, 0.6);
             background: rgba(212, 175, 55, 0.05);
         }
-        .upload-area input {
-            display: none;
+        .upload-area.dragover {
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.1);
         }
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        .upload-text {
-            color: #c0c0e0;
-        }
-        .script-list {
+        .upload-icon { font-size: 48px; margin-bottom: 10px; }
+        .upload-text { color: #c0c0e0; }
+        
+        .paste-area {
             margin: 20px 0;
         }
+        .paste-area textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            padding: 15px;
+            resize: vertical;
+        }
+        .paste-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .paste-controls input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .script-list { margin: 20px 0; }
         .script-item {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(212, 175, 55, 0.2);
@@ -147,54 +146,12 @@
             justify-content: space-between;
             align-items: center;
         }
-        .script-info {
-            color: white;
-        }
-        .script-name {
-            font-weight: 600;
-            color: #d4af37;
-        }
-        .script-id {
-            font-size: 12px;
-            color: #a0a0c0;
-        }
-        .whitelist-section {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-        }
-        .whitelist-title {
-            color: #d4af37;
-            margin-bottom: 15px;
-        }
-        .whitelist-input {
-            display: flex;
-            gap: 10px;
-        }
-        .whitelist-input input {
-            flex: 1;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 8px;
-            color: white;
-        }
-        .whitelist-list {
-            margin-top: 15px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .whitelist-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            margin-bottom: 5px;
-            color: white;
-        }
+        .script-info { color: white; }
+        .script-name { font-weight: 600; color: #d4af37; }
+        .script-id { font-size: 12px; color: #a0a0c0; }
+        
+        .success-message { color: #4caf50; font-size: 14px; margin-top: 10px; }
+        .error-message { color: #ff6b6b; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -207,42 +164,40 @@
         <div id="accessDenied" class="access-denied hidden">
             <h2>⛔ ACCESS DENIED</h2>
             <p>You are not whitelisted to view this page.</p>
-            <p style="font-size: 12px; color: #606080;">If you believe this is an error, contact the system administrator.</p>
         </div>
 
         <div id="loginBox" class="login-box">
-            <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="if(event.key==='Enter') login()">
+            <input type="password" id="passwordInput" placeholder="Enter admin password">
             <button class="btn" onclick="login()">🔐 Login</button>
             <div id="loginError" class="error-message"></div>
         </div>
 
-        <div id="adminPanel" class="admin-panel hidden">
+        <div id="adminPanel" class="hidden">
             <div class="header-actions">
                 <h3 style="color: #d4af37;">📜 Script Management</h3>
                 <button class="btn btn-small" onclick="logout()">🚪 Logout</button>
             </div>
             
-            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <!-- Drag & Drop Upload -->
+            <div class="upload-area" id="dropArea">
                 <div class="upload-icon">📁</div>
-                <div class="upload-text">Click to upload .lua script<br><small style="color: #8080a0;">File name must be the Game ID (e.g., 13822889.lua)</small></div>
-                <input type="file" id="fileInput" accept=".lua" onchange="uploadScript(this)">
+                <div class="upload-text">Drag & drop .lua file here<br>or click to browse</div>
+                <input type="file" id="fileInput" accept=".lua" style="display: none;">
+            </div>
+            
+            <!-- Paste Area -->
+            <div class="paste-area">
+                <textarea id="codeInput" placeholder="Paste your Lua code here..."></textarea>
+                <div class="paste-controls">
+                    <input type="text" id="gameIdInput" placeholder="Game ID (e.g., 1537690962 or loader)">
+                    <button class="btn btn-small" onclick="uploadPasted()">📤 Upload Pasted</button>
+                </div>
             </div>
             
             <div id="uploadStatus" class="success-message"></div>
             
             <div class="script-list" id="scriptList">
                 <p style="color: #a0a0c0; text-align: center;">Loading scripts...</p>
-            </div>
-            
-            <div class="whitelist-section">
-                <div class="whitelist-title">👥 Admin Whitelist</div>
-                <div class="whitelist-input">
-                    <input type="text" id="whitelistUserInput" placeholder="Enter Discord ID">
-                    <button class="btn btn-small" onclick="addToWhitelist()">Add</button>
-                </div>
-                <div class="whitelist-list" id="whitelistList">
-                    <p style="color: #a0a0c0;">Loading whitelist...</p>
-                </div>
             </div>
         </div>
     </div>
@@ -252,21 +207,6 @@
         const API_URL = "https://eclipse-discordbot-production.up.railway.app";
         
         let isAuthenticated = false;
-        let currentUser = null;
-        
-        async function checkWhitelist(identifier) {
-            try {
-                const response = await fetch(`${API_URL}/api/admin/check-whitelist`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier })
-                });
-                const data = await response.json();
-                return data.whitelisted;
-            } catch (e) {
-                return false;
-            }
-        }
         
         async function login() {
             const password = document.getElementById('passwordInput').value;
@@ -277,53 +217,113 @@
                 return;
             }
             
-            const identifier = prompt("Enter your Discord ID for verification:");
-            if (!identifier) {
-                errorDiv.textContent = '❌ Discord ID required';
-                return;
-            }
+            const identifier = prompt("Enter your Discord ID:");
+            if (!identifier) return;
             
-            const whitelisted = await checkWhitelist(identifier);
-            if (!whitelisted) {
-                // FIRST LOGIN - Auto whitelist if database is empty
-                try {
-                    const response = await fetch(`${API_URL}/api/admin/whitelist`);
-                    const currentWhitelist = await response.json();
-                    
-                    if (currentWhitelist.length === 0) {
-                        // Database is empty, auto-add this user
-                        await fetch(`${API_URL}/api/admin/whitelist/add`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ identifier })
-                        });
-                        // Continue to login - don't block
-                    } else {
-                        document.getElementById('loginBox').classList.add('hidden');
-                        document.getElementById('accessDenied').classList.remove('hidden');
-                        return;
-                    }
-                } catch (e) {
+            try {
+                const response = await fetch(`${API_URL}/api/admin/check-whitelist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier })
+                });
+                const data = await response.json();
+                
+                if (!data.whitelisted) {
                     document.getElementById('loginBox').classList.add('hidden');
                     document.getElementById('accessDenied').classList.remove('hidden');
                     return;
                 }
+                
+                isAuthenticated = true;
+                document.getElementById('loginBox').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadScripts();
+                setupDragDrop();
+            } catch (e) {
+                errorDiv.textContent = '❌ Connection failed';
             }
-            
-            isAuthenticated = true;
-            currentUser = identifier;
-            document.getElementById('loginBox').classList.add('hidden');
-            document.getElementById('adminPanel').classList.remove('hidden');
-            loadScripts();
-            loadWhitelist();
         }
         
         function logout() {
             isAuthenticated = false;
-            currentUser = null;
             document.getElementById('adminPanel').classList.add('hidden');
             document.getElementById('loginBox').classList.remove('hidden');
             document.getElementById('passwordInput').value = '';
+        }
+        
+        function setupDragDrop() {
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropArea.addEventListener('click', () => fileInput.click());
+            
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+            
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('dragover');
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.lua')) {
+                    uploadFile(file);
+                } else {
+                    alert('Please drop a .lua file');
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) uploadFile(file);
+            });
+        }
+        
+        async function uploadFile(file) {
+            const gameId = file.name.replace('.lua', '');
+            const content = await file.text();
+            await uploadScript(gameId, content, file.name);
+        }
+        
+        async function uploadPasted() {
+            const gameId = document.getElementById('gameIdInput').value.trim();
+            const content = document.getElementById('codeInput').value;
+            
+            if (!gameId) { alert('Please enter a Game ID'); return; }
+            if (!content) { alert('Please paste some code'); return; }
+            
+            await uploadScript(gameId, content, `${gameId}.lua`);
+            document.getElementById('codeInput').value = '';
+            document.getElementById('gameIdInput').value = '';
+        }
+        
+        async function uploadScript(gameId, content, fileName) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.textContent = 'Uploading...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, content })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.textContent = `✅ ${fileName || gameId + '.lua'} uploaded!`;
+                    loadScripts();
+                } else {
+                    statusDiv.textContent = `❌ Upload failed`;
+                }
+            } catch (e) {
+                statusDiv.textContent = '❌ Connection error';
+            }
+            
+            setTimeout(() => statusDiv.textContent = '', 3000);
         }
         
         async function loadScripts() {
@@ -340,7 +340,7 @@
                 listDiv.innerHTML = scripts.map(s => `
                     <div class="script-item">
                         <div class="script-info">
-                            <div class="script-name">Game ${s.gameId}</div>
+                            <div class="script-name">${s.name}</div>
                             <div class="script-id">Game ID: ${s.gameId}</div>
                         </div>
                         <div>
@@ -353,46 +353,8 @@
             }
         }
         
-        async function uploadScript(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            const gameId = file.name.replace('.lua', '');
-            if (!/^\d+$/.test(gameId)) {
-                alert('File name must be the Game ID (numbers only)!');
-                return;
-            }
-            
-            const statusDiv = document.getElementById('uploadStatus');
-            statusDiv.textContent = 'Uploading...';
-            
-            const content = await file.text();
-            
-            try {
-                const response = await fetch(`${API_URL}/api/admin/upload`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gameId, content })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    statusDiv.textContent = `✅ ${file.name} uploaded successfully!`;
-                    loadScripts();
-                } else {
-                    statusDiv.textContent = `❌ Upload failed: ${data.error}`;
-                }
-            } catch (e) {
-                statusDiv.textContent = '❌ Upload failed: Connection error';
-            }
-            
-            input.value = '';
-            setTimeout(() => statusDiv.textContent = '', 3000);
-        }
-        
         async function deleteScript(gameId) {
-            if (!confirm(`Delete script for Game ID ${gameId}?`)) return;
-            
+            if (!confirm(`Delete ${gameId}?`)) return;
             try {
                 await fetch(`${API_URL}/api/admin/delete`, {
                     method: 'POST',
@@ -401,55 +363,7 @@
                 });
                 loadScripts();
             } catch (e) {
-                alert('Failed to delete script');
-            }
-        }
-        
-        async function loadWhitelist() {
-            const listDiv = document.getElementById('whitelistList');
-            try {
-                const response = await fetch(`${API_URL}/api/admin/whitelist`);
-                const whitelist = await response.json();
-                
-                listDiv.innerHTML = whitelist.map(w => `
-                    <div class="whitelist-item">
-                        <span>${w.identifier}</span>
-                        <button class="btn btn-small btn-danger" onclick="removeFromWhitelist('${w.identifier}')" style="padding: 4px 10px;">Remove</button>
-                    </div>
-                `).join('');
-            } catch (e) {
-                listDiv.innerHTML = '<p style="color: #ff6b6b;">Failed to load whitelist</p>';
-            }
-        }
-        
-        async function addToWhitelist() {
-            const input = document.getElementById('whitelistUserInput');
-            const identifier = input.value.trim();
-            if (!identifier) return;
-            
-            try {
-                await fetch(`${API_URL}/api/admin/whitelist/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier })
-                });
-                input.value = '';
-                loadWhitelist();
-            } catch (e) {
-                alert('Failed to add to whitelist');
-            }
-        }
-        
-        async function removeFromWhitelist(identifier) {
-            try {
-                await fetch(`${API_URL}/api/admin/whitelist/remove`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier })
-                });
-                loadWhitelist();
-            } catch (e) {
-                alert('Failed to remove from whitelist');
+                alert('Failed to delete');
             }
         }
     </script>
