@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclipse · Gateway</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #12122a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(20, 20, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(147, 112, 219, 0.4);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        .logo h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #9370DB 0%, #d4af37 50%, #9370DB 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            color: #a0a0c0;
+            font-size: 14px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+        .description {
+            color: #c0c0e0;
+            font-size: 16px;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(147, 112, 219, 0.3);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            border-color: #9370DB;
+            box-shadow: 0 10px 25px rgba(147, 112, 219, 0.3);
+        }
+        .btn-linkvertise:hover { background: linear-gradient(135deg, #1a1a40 0%, #2a2a60 100%); }
+        .btn-lootlabs:hover { background: linear-gradient(135deg, #2a1a30 0%, #3a2a45 100%); }
+        .loading { color: #9370DB; font-size: 14px; margin-top: 20px; }
+        .footer {
+            color: #606080;
+            font-size: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>ECLIPSE</h1>
+        </div>
+        <div class="subtitle">Key Gateway</div>
+        <div class="description">
+            Choose how you want to verify and get your key.
+        </div>
+        
+        <div class="button-group">
+            <button class="btn btn-linkvertise" id="linkvertiseBtn">
+                <span>🔗</span> Continue with Linkvertise
+            </button>
+            <button class="btn btn-lootlabs" id="lootlabsBtn">
+                <span>🎁</span> Continue with LootLabs
+            </button>
+        </div>
+        
+        <div class="loading" id="loading"></div>
+        
+        <div class="footer">
+            You'll receive your key after completing verification.
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://eclipse-discordbot-production.up.railway.app";
+        const SECRET_KEY = "EclipseGateway2024!";
+        
+        function generateToken() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 15);
+            const data = `${timestamp}|${random}`;
+            let encrypted = '';
+            for (let i = 0; i < data.length; i++) {
+                encrypted += String.fromCharCode(data.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length));
+            }
+            return btoa(encrypted);
+        }
+        
+        async function createSession(platform) {
+            const token = generateToken();
+            const loading = document.getElementById('loading');
+            loading.textContent = 'Creating session...';
+            
+            try {
+                await fetch(`${API_URL}/api/create-session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token, platform: platform })
+                });
+                
+                const keyPageUrl = `https://landonmobley04302012-sys.github.io/Eclipse-Website/key.html?token=${encodeURIComponent(token)}`;
+                
+                if (platform === 'linkvertise') {
+                    window.location.href = `https://link-target.net/4622724/kljd4wJBl8Ep`;
+                } else {
+                    window.location.href = `https://loot-link.com/s?8ms2wS8y&data=Nzr3Cg0gQKzlaRZEcKCWkamdbgPY/M7nOFBZppxg/dwNEpR6v6T3RysnZmPJD5vVfN9yyZJs3Cw3BCTQ6knUmg%3D%3D`;
+                }
+            } catch (error) {
+                loading.textContent = 'Error creating session. Please try again.';
+            }
+        }
+        
+        document.getElementById('linkvertiseBtn').addEventListener('click', () => createSession('linkvertise'));
+        document.getElementById('lootlabsBtn').addEventListener('click', () => createSession('lootlabs'));
+    </script>
+</body>
+</html>
