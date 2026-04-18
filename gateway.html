@@ -118,6 +118,26 @@
         const API_URL = "https://eclipse-discordbot-production.up.railway.app";
         const SECRET_KEY = "EclipseGateway2024!";
         
+        // Anti-bot: Require mouse movement
+        let mouseMoved = false;
+        document.addEventListener('mousemove', function() {
+            mouseMoved = true;
+        });
+        
+        // Anti-bot: Detect headless browsers
+        if (navigator.webdriver || (navigator.languages && navigator.languages.length === 0)) {
+            document.body.innerHTML = '<h1 style="color:white;text-align:center;padding:50px;">⛔ Automated browsers not allowed</h1>';
+            throw new Error('Headless browser detected');
+        }
+        
+        // Anti-bot: Disable right-click on buttons
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.classList.contains('btn')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
         function generateToken() {
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2, 15);
@@ -130,6 +150,11 @@
         }
         
         async function createSession(platform) {
+            if (!mouseMoved) {
+                alert('Please use your mouse to click the button.');
+                return;
+            }
+            
             const token = generateToken();
             const loading = document.getElementById('loading');
             loading.textContent = 'Creating session...';
@@ -144,7 +169,7 @@
                 // Store token in localStorage so key page can retrieve it
                 localStorage.setItem('eclipse_key_token', token);
                 
-                // Redirect to ad platform WITHOUT token in URL
+                // Redirect to ad platform
                 if (platform === 'linkvertise') {
                     window.location.href = `https://link-target.net/4622724/kljd4wJBl8Ep`;
                 } else {
@@ -155,8 +180,23 @@
             }
         }
         
-        document.getElementById('linkvertiseBtn').addEventListener('click', () => createSession('linkvertise'));
-        document.getElementById('lootlabsBtn').addEventListener('click', () => createSession('lootlabs'));
+        // Attach protected handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const linkBtn = document.getElementById('linkvertiseBtn');
+            const lootBtn = document.getElementById('lootlabsBtn');
+            
+            if (linkBtn) {
+                linkBtn.addEventListener('click', function(e) {
+                    createSession('linkvertise');
+                });
+            }
+            
+            if (lootBtn) {
+                lootBtn.addEventListener('click', function(e) {
+                    createSession('lootlabs');
+                });
+            }
+        });
     </script>
 </body>
 </html>
