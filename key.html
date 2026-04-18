@@ -198,15 +198,12 @@
         }
         
         async function validateAndGetKey() {
-            // Try URL first, fallback to localStorage
-            const urlParams = new URLSearchParams(window.location.search);
-            let token = urlParams.get('token');
+            // SECURITY: ONLY accept token from localStorage - NEVER from URL
+            let token = localStorage.getItem('eclipse_key_token');
             
-            if (!token) {
-                token = localStorage.getItem('eclipse_key_token');
-                if (token) {
-                    localStorage.removeItem('eclipse_key_token');
-                }
+            if (token) {
+                // Clear it immediately so it can't be stolen or reused
+                localStorage.removeItem('eclipse_key_token');
             }
             
             if (!token) {
