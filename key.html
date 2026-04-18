@@ -198,8 +198,16 @@
         }
         
         async function validateAndGetKey() {
+            // Try URL first, fallback to localStorage
             const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
+            let token = urlParams.get('token');
+            
+            if (!token) {
+                token = localStorage.getItem('eclipse_key_token');
+                if (token) {
+                    localStorage.removeItem('eclipse_key_token');
+                }
+            }
             
             if (!token) {
                 showError('No verification token found. Please start from the gateway.');
