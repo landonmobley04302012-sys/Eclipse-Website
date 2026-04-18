@@ -141,8 +141,10 @@
                     body: JSON.stringify({ token: token, platform: platform })
                 });
                 
-                const keyPageUrl = `https://landonmobley04302012-sys.github.io/Eclipse-Website/key.html?token=${encodeURIComponent(token)}`;
+                // Store token in localStorage so key page can retrieve it
+                localStorage.setItem('eclipse_key_token', token);
                 
+                // Redirect to ad platform WITHOUT token in URL
                 if (platform === 'linkvertise') {
                     window.location.href = `https://link-target.net/4622724/kljd4wJBl8Ep`;
                 } else {
