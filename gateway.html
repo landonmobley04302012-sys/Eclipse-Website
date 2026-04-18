@@ -48,37 +48,24 @@
             margin-bottom: 35px;
             line-height: 1.6;
         }
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
+        .loading {
+            color: #9370DB;
+            font-size: 16px;
+            margin: 20px 0;
         }
-        .btn {
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(147, 112, 219, 0.3);
-            color: white;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 3px solid rgba(147, 112, 219, 0.2);
+            border-top: 3px solid #9370DB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            border-color: #9370DB;
-            box-shadow: 0 10px 25px rgba(147, 112, 219, 0.3);
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .btn-linkvertise:hover { background: linear-gradient(135deg, #1a1a40 0%, #2a2a60 100%); }
-        .btn-lootlabs:hover { background: linear-gradient(135deg, #2a1a30 0%, #3a2a45 100%); }
-        .loading { color: #9370DB; font-size: 14px; margin-top: 20px; }
         .footer {
             color: #606080;
             font-size: 13px;
@@ -95,48 +82,31 @@
         </div>
         <div class="subtitle">Key Gateway</div>
         <div class="description">
-            Choose how you want to verify and get your key.
+            Preparing your secure verification...
         </div>
         
-        <div class="button-group">
-            <button class="btn btn-linkvertise" id="linkvertiseBtn">
-                <span>🔗</span> Continue with Linkvertise
-            </button>
-            <button class="btn btn-lootlabs" id="lootlabsBtn">
-                <span>🎁</span> Continue with LootLabs
-            </button>
-        </div>
-        
-        <div class="loading" id="loading"></div>
+        <div class="spinner"></div>
+        <div class="loading" id="loading">Creating session...</div>
         
         <div class="footer">
-            You'll receive your key after completing verification.
+            You'll be redirected to complete verification.
         </div>
     </div>
 
     <script>
         const API_URL = "https://eclipse-discordbot-production.up.railway.app";
         const SECRET_KEY = "EclipseGateway2024!";
+        const WORKINK_URL = "https://work.ink/2wlq/eclipse-key";
         
-        // Anti-bot: Require mouse movement
         let mouseMoved = false;
         document.addEventListener('mousemove', function() {
             mouseMoved = true;
         });
         
-        // Anti-bot: Detect headless browsers
         if (navigator.webdriver || (navigator.languages && navigator.languages.length === 0)) {
             document.body.innerHTML = '<h1 style="color:white;text-align:center;padding:50px;">⛔ Automated browsers not allowed</h1>';
             throw new Error('Headless browser detected');
         }
-        
-        // Anti-bot: Disable right-click on buttons
-        document.addEventListener('contextmenu', function(e) {
-            if (e.target.classList.contains('btn')) {
-                e.preventDefault();
-                return false;
-            }
-        });
         
         function generateToken() {
             const timestamp = Date.now();
@@ -149,53 +119,34 @@
             return btoa(encrypted);
         }
         
-        async function createSession(platform) {
-            if (!mouseMoved) {
-                alert('Please use your mouse to click the button.');
-                return;
-            }
-            
+        async function startVerification() {
             const token = generateToken();
             const loading = document.getElementById('loading');
-            loading.textContent = 'Creating session...';
+            loading.textContent = 'Creating secure session...';
             
             try {
                 await fetch(`${API_URL}/api/create-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: token, platform: platform })
+                    body: JSON.stringify({ token: token, platform: 'workink' })
                 });
                 
-                // Store token in localStorage so key page can retrieve it
                 localStorage.setItem('eclipse_key_token', token);
                 
-                // Redirect to ad platform
-                if (platform === 'linkvertise') {
-                    window.location.href = `https://link-target.net/4622724/kljd4wJBl8Ep`;
-                } else {
-                    window.location.href = `https://loot-link.com/s?8ms2wS8y&data=Nzr3Cg0gQKzlaRZEcKCWkamdbgPY/M7nOFBZppxg/dwNEpR6v6T3RysnZmPJD5vVfN9yyZJs3Cw3BCTQ6knUmg%3D%3D`;
-                }
+                loading.textContent = 'Redirecting to verification...';
+                setTimeout(() => {
+                    window.location.href = WORKINK_URL;
+                }, 500);
+                
             } catch (error) {
                 loading.textContent = 'Error creating session. Please try again.';
             }
         }
         
-        // Attach protected handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            const linkBtn = document.getElementById('linkvertiseBtn');
-            const lootBtn = document.getElementById('lootlabsBtn');
-            
-            if (linkBtn) {
-                linkBtn.addEventListener('click', function(e) {
-                    createSession('linkvertise');
-                });
-            }
-            
-            if (lootBtn) {
-                lootBtn.addEventListener('click', function(e) {
-                    createSession('lootlabs');
-                });
-            }
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                startVerification();
+            }, 500);
         });
     </script>
 </body>
