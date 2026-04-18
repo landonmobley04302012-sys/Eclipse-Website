@@ -172,9 +172,27 @@
     <script>
         const SECRET_KEY = "EclipseGateway2024!";
         const API_URL = "https://eclipse-discordbot-production.up.railway.app";
-        const TOKEN_VALIDITY_MINUTES = 10;
+        const TOKEN_VALIDITY_MINUTES = 120; // 2 hours for slow ad completions
         
         let currentKey = "";
+        
+        // Anti-bot: Disable right-click on copy button
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.id === 'copyBtn') {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // Anti-bot: Prevent devtools detection (not foolproof but helps)
+        let devtoolsOpen = false;
+        const threshold = 160;
+        setInterval(function() {
+            if (window.outerWidth - window.innerWidth > threshold || 
+                window.outerHeight - window.innerHeight > threshold) {
+                devtoolsOpen = true;
+            }
+        }, 500);
         
         function decryptToken(encrypted) {
             try {
